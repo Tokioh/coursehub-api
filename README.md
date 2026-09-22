@@ -1,114 +1,136 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🎓 CourseHub API - Sistema de Gestión Académica (NestJS)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API RESTful modular desarrollada con **NestJS** y **TypeScript** para la gestión de Cursos, Estudiantes y Matrículas con validaciones de negocio e inyección de dependencias.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🏗️ Arquitectura Modular
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```text
+src/
+├── app.module.ts
+├── main.ts
+├── courses/               # Módulo de Gestión de Cursos
+│   ├── courses.controller.ts
+│   ├── courses.module.ts
+│   ├── courses.service.ts
+│   └── dto/
+├── students/              # Módulo de Gestión de Estudiantes
+│   ├── students.controller.ts
+│   ├── students.module.ts
+│   ├── students.service.ts
+│   ├── dto/
+│   └── interfaces/
+└── enrollments/           # Módulo de Matrículas (Reglas de Negocio)
+    ├── enrollments.controller.ts
+    ├── enrollments.module.ts
+    ├── enrollments.service.ts
+    ├── dto/
+    │   ├── create-enrollment.dto.ts
+    │   └── filter-enrollment.dto.ts
+    ├── interfaces/
+    │   └── enrollment.interface.ts
+    └── pipes/
+        └── parse-positive-int.pipe.ts
 ```
 
-## Compile and run the project
+---
+
+## ⚙️ Instalación y Ejecución
 
 ```bash
-# development
-$ npm run start
+# 1. Instalar dependencias
+npm install
 
-# watch mode
-$ npm run start:dev
+# 2. Iniciar en modo desarrollo
+npm run start:dev
 
-# production mode
-$ npm run start:prod
+# 3. Compilar para producción
+npm run build
 ```
 
-## Run tests
+---
 
+## 📋 Catálogo de Endpoints
+
+### 👥 1. Estudiantes (`/students`)
+| Método | Endpoint | Descripción | Código Éxito |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/students` | Registrar un nuevo estudiante | `201 Created` |
+| `GET` | `/students` | Listar todos los estudiantes (filtros: `career`, `semester`, `isActive`) | `200 OK` |
+| `GET` | `/students/:id` | Obtener detalle de un estudiante | `200 OK` |
+| `PATCH` | `/students/:id` | Actualizar datos de un estudiante | `200 OK` |
+| `PATCH` | `/students/:id/status` | Cambiar estado (`isActive`) | `200 OK` |
+| `DELETE` | `/students/:id` | Eliminar estudiante (solo si está activo) | `200 OK` |
+
+---
+
+### 📚 2. Cursos (`/courses`)
+| Método | Endpoint | Descripción | Código Éxito |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/courses` | Registrar un curso | `201 Created` |
+| `GET` | `/courses` | Listar cursos (filtro: `level`) | `200 OK` |
+| `GET` | `/courses/:id` | Obtener detalle de un curso | `200 OK` |
+| `PATCH` | `/courses/:id` | Actualizar curso | `200 OK` |
+| `DELETE` | `/courses/:id` | Eliminar curso | `200 OK` |
+
+---
+
+### 📝 3. Matrículas (`/enrollments`)
+| Método | Endpoint | Descripción | Parámetros / Body | Código Éxito | Códigos Error |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/enrollments` | Registrar matrícula | `{ "studentId": 1, "courseId": 3 }` | `201 Created` | `400`, `404`, `409` |
+| `GET` | `/enrollments` | Listar matrículas | `?studentId=1&courseId=2` | `200 OK` | `400` (filtros inválidos) |
+| `GET` | `/students/:studentId/enrollments` | Matrículas de un estudiante | `studentId` en ruta | `200 OK` | `400` (id inválido), `404` |
+| `GET` | `/courses/:courseId/enrollments` | Matrículas de un curso | `courseId` en ruta | `200 OK` | `400` (id inválido), `404` |
+| `DELETE` | `/enrollments/:id` | Cancelar matrícula | `id` en ruta | `200 OK` | `400` (id inválido), `404` |
+
+---
+
+## 🛡️ Reglas de Negocio Implementadas en Matrículas
+
+1. **Validación de Estudiante:** El estudiante debe existir (`404 Not Found`).
+2. **Validación de Estado Activo:** Solo estudiantes activos (`isActive: true`) pueden matricularse (`400 Bad Request`).
+3. **Validación de Curso:** El curso debe existir (`404 Not Found`).
+4. **Prevención de Duplicados:** No se permite que un estudiante se matricule dos veces en el mismo curso (`409 Conflict`).
+5. **Validación de Tipos y Parámetros:** `ParsePositiveIntPipe` y `ValidationPipe` global protegen rutas y cuerpos de datos no numéricos o menores o iguales a 0.
+
+---
+
+## 🧪 Pruebas y Ejemplos con cURL
+
+### 1. Registrar Matrícula Exitosa (201 Created)
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+curl -X POST http://localhost:3000/enrollments \
+  -H "Content-Type: application/json" \
+  -d '{"studentId": 1, "courseId": 3}'
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### 2. Intento de Matrícula de Estudiante Inactivo (400 Bad Request)
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl -X POST http://localhost:3000/enrollments \
+  -H "Content-Type: application/json" \
+  -d '{"studentId": 2, "courseId": 1}'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 3. Intento de Matrícula Duplicada (409 Conflict)
+```bash
+curl -X POST http://localhost:3000/enrollments \
+  -H "Content-Type: application/json" \
+  -d '{"studentId": 1, "courseId": 1}'
+```
 
-## Observability
+### 4. Consultar Matrículas de un Estudiante
+```bash
+curl http://localhost:3000/students/1/enrollments
+```
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+### 5. Consultar Matrículas de un Curso
+```bash
+curl http://localhost:3000/courses/1/enrollments
+```
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### 6. Cancelar una Matrícula Existente
+```bash
+curl -X DELETE http://localhost:3000/enrollments/1
+```
