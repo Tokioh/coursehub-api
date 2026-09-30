@@ -31,8 +31,35 @@ export class StudentsService {
       semester: 4,
       isActive: false,
     },
+    {
+      id: 3,
+      name: 'Mateo Cedeño',
+      email: 'mateo.cedeno@uleam.edu.ec',
+      age: 22,
+      career: 'Tecnologías de la Información',
+      semester: 6,
+      isActive: true,
+    },
+    {
+      id: 4,
+      name: 'Valeria Moreira',
+      email: 'valeria.moreira@uleam.edu.ec',
+      age: 19,
+      career: 'Software',
+      semester: 3,
+      isActive: true,
+    },
+    {
+      id: 5,
+      name: 'Jorge Zambrano',
+      email: 'jorge.zambrano@uleam.edu.ec',
+      age: 23,
+      career: 'Sistemas',
+      semester: 7,
+      isActive: false,
+    },
   ];
-  private nextId: number = 3;
+  private nextId: number = 6;
 
   create(createStudentDto: CreateStudentDto): Student {
     const emailExists = this.students.some(

@@ -13,7 +13,7 @@ import { CreateCourseDto } from './dto/create-course.dto.js';
 
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(private readonly coursesService: CoursesService) { }
 
   @Get()
   findAll(@Query('level') level?: string) {
@@ -26,7 +26,7 @@ export class CoursesController {
   }
 
   @Post()
-   create(@Body() createCourseDto: CreateCourseDto) {
+  create(@Body() createCourseDto: CreateCourseDto) {
     return this.coursesService.create(createCourseDto);
   }
 

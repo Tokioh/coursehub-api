@@ -15,10 +15,12 @@ import { CoursesService } from '../courses/courses.service.js';
 export class EnrollmentsService {
   // Matrículas iniciales de prueba en memoria
   private enrollments: Enrollment[] = [
-    { id: 1, studentId: 1, courseId: 1 },
-    { id: 2, studentId: 1, courseId: 2 },
+    { id: 1, studentId: 1, courseId: 1, enrolledAt: new Date('2026-09-01T08:30:00.000Z') },
+    { id: 2, studentId: 1, courseId: 2, enrolledAt: new Date('2026-09-02T09:15:00.000Z') },
+    { id: 3, studentId: 3, courseId: 1, enrolledAt: new Date('2026-09-03T10:00:00.000Z') },
+    { id: 4, studentId: 4, courseId: 3, enrolledAt: new Date('2026-09-04T11:45:00.000Z') },
   ];
-  private nextId = 3;
+  private nextId = 5;
 
   constructor(
     // Inyección de dependencias de los servicios de otros módulos
