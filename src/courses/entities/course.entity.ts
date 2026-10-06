@@ -1,13 +1,23 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'; // 1
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  type Relation,
+} from 'typeorm';
+import type { Enrollment } from '../../enrollments/entities/enrollment.entity.js';
 
-@Entity('courses') // 2
-export class Course { // 3
-    @PrimaryGeneratedColumn() // 4
-    id: number;
+@Entity('courses')
+export class Course {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column() // 5
-    title: string;
+  @Column()
+  title: string;
 
-    @Column() // 6
-    level: string;
+  @Column()
+  level: string;
+
+  @OneToMany('Enrollment', (enrollment: Enrollment) => enrollment.course)
+  enrollments?: Relation<Enrollment>[];
 }

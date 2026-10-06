@@ -2,6 +2,10 @@
 workspace:
   id: fa9b2dbd-9f92-4943-864b-cf2554c70a3f
 
+cloudResources:
+  collections:
+    ../postman/collections/CourseHub API - Semana 5 (Demostración): 61098e72-39f0-4927-bee6-c461b1376762
+
 # All resources in the `postman/` folder are automatically registered in Local View.
 # Point to additional files outside the `postman/` folder to register them individually. Example:
 #localResources:

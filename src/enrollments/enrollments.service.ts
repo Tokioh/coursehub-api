@@ -4,147 +4,156 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Enrollment } from './interfaces/enrollment.interface.js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Enrollment } from './entities/enrollment.entity.js';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto.js';
 import { FilterEnrollmentDto } from './dto/filter-enrollment.dto.js';
 import { StudentsService } from '../students/students.service.js';
 import { CoursesService } from '../courses/courses.service.js';
 
-
 @Injectable()
 export class EnrollmentsService {
-  // Matrículas iniciales de prueba en memoria
-  private enrollments: Enrollment[] = [
-    { id: 1, studentId: 1, courseId: 1, enrolledAt: new Date('2026-09-01T08:30:00.000Z') },
-    { id: 2, studentId: 1, courseId: 2, enrolledAt: new Date('2026-09-02T09:15:00.000Z') },
-    { id: 3, studentId: 3, courseId: 1, enrolledAt: new Date('2026-09-03T10:00:00.000Z') },
-    { id: 4, studentId: 4, courseId: 3, enrolledAt: new Date('2026-09-04T11:45:00.000Z') },
-  ];
-  private nextId = 5;
-
   constructor(
-    // Inyección de dependencias de los servicios de otros módulos
+    @InjectRepository(Enrollment)
+    private readonly enrollmentsRepository: Repository<Enrollment>,
     private readonly studentsService: StudentsService,
     private readonly coursesService: CoursesService,
-  ) { }
+  ) {}
 
   /**
    * Registra una nueva matrícula aplicando todas las validaciones de negocio:
-   * 1. Estudiante existe
-   * 2. Estudiante está activo
-   * 3. Curso existe
-   * 4. Matrícula no duplicada
+   * 1. Estudiante existe (404)
+   * 2. Estudiante está activo (400)
+   * 3. Curso existe (404)
+   * 4. Matrícula no duplicada (409)
    */
-  create(createEnrollmentDto: CreateEnrollmentDto): Enrollment {
+  async create(createEnrollmentDto: CreateEnrollmentDto): Promise<Enrollment> {
     const { studentId, courseId } = createEnrollmentDto;
 
-    // 1. Validar que el estudiante exista (findOne lanza NotFoundException si no existe)
-    const student = this.studentsService.findOne(studentId);
+    // 1. Validar que el estudiante exista (findOne lanza NotFoundException 404 si no existe)
+    const student = await this.studentsService.findOne(studentId);
 
-    // 2. Validar que el estudiante esté activo
+    // 2. Validar que el estudiante esté activo (400)
     if (!student.isActive) {
       throw new BadRequestException(
         `El estudiante '${student.name}' (id: ${studentId}) está inactivo y no puede matricularse`,
       );
     }
 
-    // 3. Validar que el curso exista
-    const course = this.coursesService.findOne(courseId);
-    if (!course) {
-      throw new NotFoundException(
-        `El curso con id ${courseId} no fue encontrado`,
-      );
-    }
+    // 3. Validar que el curso exista (findOne lanza NotFoundException 404 si no existe)
+    const course = await this.coursesService.findOne(courseId);
 
     // 4. Validar que no exista matrícula duplicada (mismo studentId y courseId)
-    const alreadyEnrolled = this.enrollments.some(
-      (e) => e.studentId === studentId && e.courseId === courseId,
-    );
+    const alreadyEnrolled = await this.enrollmentsRepository.findOne({
+      where: {
+        student: { id: studentId },
+        course: { id: courseId },
+      },
+    });
 
     if (alreadyEnrolled) {
       throw new ConflictException(
-        `El estudiante con id ${studentId} ya está matriculado en el curso ${courseId}`,
+        `El estudiante con id ${studentId} ya está matriculado en el curso con id ${courseId}`,
       );
     }
 
-    // 5. Crear y almacenar la nueva matrícula
-    const newEnrollment: Enrollment = {
-      id: this.nextId++,
-      studentId,
-      courseId,
-      enrolledAt: new Date(),
-    };
+    // 5. Crear y almacenar la nueva matrícula en PostgreSQL
+    try {
+      const newEnrollment = this.enrollmentsRepository.create({
+        student,
+        course,
+      });
 
-    this.enrollments.push(newEnrollment);
-    return newEnrollment;
+      return await this.enrollmentsRepository.save(newEnrollment);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        throw new ConflictException(
+          `El estudiante con id ${studentId} ya está matriculado en el curso con id ${courseId}`,
+        );
+      }
+      throw error;
+    }
   }
 
   /**
    * Retorna matrículas con filtros combinables opcionales (studentId y/o courseId)
+   * y carga las relaciones de student y course ordenadas por fecha.
    */
-  findAll(filters?: FilterEnrollmentDto): Enrollment[] {
-    let result = [...this.enrollments];
+  async findAll(filters?: FilterEnrollmentDto): Promise<Enrollment[]> {
+    const query = this.enrollmentsRepository
+      .createQueryBuilder('enrollment')
+      .leftJoinAndSelect('enrollment.student', 'student')
+      .leftJoinAndSelect('enrollment.course', 'course')
+      .orderBy('enrollment.createdAt', 'DESC');
 
-    if (!filters) {
-      return result;
+    if (filters?.studentId) {
+      query.andWhere('student.id = :studentId', {
+        studentId: filters.studentId,
+      });
     }
 
-    if (filters.studentId !== undefined) {
-      result = result.filter((e) => e.studentId === filters.studentId);
+    if (filters?.courseId) {
+      query.andWhere('course.id = :courseId', {
+        courseId: filters.courseId,
+      });
     }
 
-    if (filters.courseId !== undefined) {
-      result = result.filter((e) => e.courseId === filters.courseId);
-    }
-
-    return result;
+    return await query.getMany();
   }
 
   /**
    * Busca matrículas por estudiante (valida primero que el estudiante exista)
    */
-  findByStudent(studentId: number): Enrollment[] {
-    this.studentsService.findOne(studentId);
-    return this.enrollments.filter((e) => e.studentId === studentId);
+  async findByStudent(studentId: number): Promise<Enrollment[]> {
+    await this.studentsService.findOne(studentId);
+    return await this.enrollmentsRepository.find({
+      where: { student: { id: studentId } },
+      relations: { student: true, course: true },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   /**
    * Busca matrículas por curso (valida primero que el curso exista)
    */
-  findByCourse(courseId: number): Enrollment[] {
-    const course = this.coursesService.findOne(courseId);
-    if (!course) {
-      throw new NotFoundException(`El curso con id ${courseId} no existe`);
-    }
-    return this.enrollments.filter((e) => e.courseId === courseId);
+  async findByCourse(courseId: number): Promise<Enrollment[]> {
+    await this.coursesService.findOne(courseId);
+    return await this.enrollmentsRepository.find({
+      where: { course: { id: courseId } },
+      relations: { student: true, course: true },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   /**
-   * Busca una matrícula por su ID
+   * Busca una matrícula por su ID con sus relaciones
    */
-  findOne(id: number): Enrollment {
-    const enrollment = this.enrollments.find((e) => e.id === id);
+  async findOne(id: number): Promise<Enrollment> {
+    const enrollment = await this.enrollmentsRepository.findOne({
+      where: { id },
+      relations: { student: true, course: true },
+    });
+
     if (!enrollment) {
       throw new NotFoundException(`Matrícula con id ${id} no encontrada`);
     }
+
     return enrollment;
   }
 
   /**
    * Cancela / elimina una matrícula existente por ID
    */
-  remove(id: number): { message: string; deletedEnrollment: Enrollment } {
-    const index = this.enrollments.findIndex((e) => e.id === id);
-    if (index === -1) {
-      throw new NotFoundException(
-        `No se puede cancelar la matrícula: el id ${id} no existe`,
-      );
-    }
+  async remove(
+    id: number,
+  ): Promise<{ message: string; deletedEnrollment: Enrollment }> {
+    const enrollment = await this.findOne(id);
+    await this.enrollmentsRepository.remove(enrollment);
 
-    const [deletedEnrollment] = this.enrollments.splice(index, 1);
     return {
       message: `Matrícula ${id} cancelada exitosamente`,
-      deletedEnrollment,
+      deletedEnrollment: enrollment,
     };
   }
 }
