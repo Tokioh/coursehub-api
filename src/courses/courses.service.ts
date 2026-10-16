@@ -5,6 +5,9 @@ import { CreateCourseDto } from './dto/create-course.dto.js';
 import { UpdateCourseDto } from './dto/update-course.dto.js';
 import { Course } from './entities/course.entity.js';
 
+import { CoursesQueryDto } from './dto/courses-query.dto.js';
+import { PaginatedResponse } from '../common/interfaces/paginated-response.interface.js';
+
 @Injectable()
 export class CoursesService {
   constructor(
@@ -12,8 +15,30 @@ export class CoursesService {
     private readonly coursesRepository: Repository<Course>,
   ) {}
 
-  findAll(level?: string) {
-    return this.coursesRepository.find({ where: level ? { level } : {} });
+  async findAll(query?: CoursesQueryDto): Promise<PaginatedResponse<Course>> {
+    const page = query?.page && query.page > 0 ? query.page : 1;
+    const limit = query?.limit && query.limit > 0 ? query.limit : 10;
+    const sortBy = query?.sortBy ?? 'id';
+    const order = (query?.order ? query.order.toUpperCase() : 'ASC') as 'ASC' | 'DESC';
+
+    const [items, total] = await this.coursesRepository.findAndCount({
+      where: query?.level ? { level: query.level } : {},
+      order: { [sortBy]: order },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const totalPages = Math.ceil(total / limit) || (total === 0 ? 0 : 1);
+
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
   }
 
   async findOne(id: number | string): Promise<Course> {

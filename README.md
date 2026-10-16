@@ -1,6 +1,6 @@
 # CourseHub API - Sistema de Gestión Académica (NestJS & PostgreSQL)
 
-API RESTful modular desarrollada con **NestJS**, **TypeScript** y **TypeORM** sobre **PostgreSQL** para la gestión persistente de Cursos, Estudiantes y Matrículas con reglas de negocio, integridad referencial y manejo de relaciones.
+API RESTful modular desarrollada con **NestJS**, **TypeScript** y **TypeORM** sobre **PostgreSQL** para la gestión de Cursos, Estudiantes y Matrículas. Diseñada bajo principios de arquitectura limpia, validación rigurosa de DTOs, paginación predecible, ordenamiento seguro y consultas compuestas con `QueryBuilder`.
 
 ---
 
@@ -10,11 +10,15 @@ API RESTful modular desarrollada con **NestJS**, **TypeScript** y **TypeORM** so
 src/
 ├── app.module.ts              # Configuración global, TypeORM PostgreSQL y registro de módulos
 ├── main.ts                    # Bootstrap de la aplicación y ValidationPipe global
-├── courses/                   # Módulo de Gestión de Cursos
-│   ├── courses.controller.ts
+├── common/                    # Contratos y tipos comunes del sistema
+│   └── interfaces/
+│       └── paginated-response.interface.ts # Contrato estándar { items, meta }
+├── courses/                   # Módulo de Gestión de Cursos (Semana 6 · Sesión 11)
+│   ├── courses.controller.ts  # GET /courses paginado y ordenable
 │   ├── courses.module.ts
-│   ├── courses.service.ts
+│   ├── courses.service.ts     # findAndCount, skip/take, ordenamiento con lista blanca
 │   ├── dto/
+│   │   ├── courses-query.dto.ts # Query DTO (level, page, limit, sortBy, order)
 │   │   ├── create-course.dto.ts
 │   │   └── update-course.dto.ts
 │   └── entities/
@@ -32,12 +36,13 @@ src/
 │   │   └── student.entity.ts  # Entidad Student (email único, OneToMany a Enrollments)
 │   └── pipes/
 │       └── parse-student-id.pipe.ts
-└── enrollments/               # Módulo de Matrículas (Reglas de Negocio y Relaciones)
-    ├── enrollments.controller.ts
+└── enrollments/               # Módulo de Matrículas (Semana 6 · Sesión 12)
+    ├── enrollments.controller.ts # GET /enrollments con búsqueda y filtros
     ├── enrollments.module.ts
-    ├── enrollments.service.ts
+    ├── enrollments.service.ts # QueryBuilder, JOINs, ILIKE parametrizado y paginación
     ├── dto/
     │   ├── create-enrollment.dto.ts
+    │   ├── enrollments-query.dto.ts # Query DTO (search, studentId, courseId, activeOnly, page, limit)
     │   └── filter-enrollment.dto.ts
     ├── entities/
     │   └── enrollment.entity.ts # Entidad Enrollment (claves foráneas ManyToOne y UQ composite)
@@ -90,9 +95,63 @@ npm test
 
 ---
 
-## 📋 Catálogo de Endpoints
+## 📋 Catálogo de Endpoints y Parámetros
 
-### 1. Estudiantes (`/students`)
+### 1. Cursos (`/courses`) · *Semana 6 Sesión 11*
+Permite recuperar los cursos con paginación estable, filtro por nivel y ordenamiento seguro.
+
+| Método | Endpoint | Parámetros Query Opcionales | Tipo / Rango | Valor por Defecto | Descripción |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/courses` | `page` | Integer $\ge 1$ | `1` | Número de página actual |
+| `GET` | `/courses` | `limit` | Integer $[1, 50]$ | `10` | Cantidad de elementos por página |
+| `GET` | `/courses` | `sortBy` | `'id' \| 'title' \| 'level'` | `'id'` | Campo de ordenamiento seguro |
+| `GET` | `/courses` | `order` | `'ASC' \| 'DESC'` | `'ASC'` | Dirección del ordenamiento |
+| `GET` | `/courses` | `level` | String | Ninguno | Filtro exacto por nivel (`beginner`, etc.) |
+| `GET` | `/courses/:id` | - | - | - | Detalle de un curso específico (`200`, `404`) |
+| `POST` | `/courses` | - | Body JSON | - | Registrar nuevo curso (`201`, `400`) |
+| `PATCH` | `/courses/:id`| - | Body JSON | - | Actualizar curso (`200`, `404`) |
+| `DELETE`| `/courses/:id`| - | - | - | Eliminar curso (`200`, `404`) |
+
+#### Formato Estándar de Respuesta Paginada (`PaginatedResponse<T>`):
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "Introducción a NestJS",
+      "level": "beginner"
+    }
+  ],
+  "meta": {
+    "total": 12,
+    "page": 1,
+    "limit": 5,
+    "totalPages": 3
+  }
+}
+```
+
+---
+
+### 2. Matrículas (`/enrollments`) · *Semana 6 Sesión 12*
+Permite consultar matrículas con sus relaciones precargadas (`Student` y `Course`), búsqueda por texto y combinación de filtros opcionales.
+
+| Método | Endpoint | Parámetros Query Opcionales | Tipo / Regla | Valor por Defecto | Descripción |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/enrollments` | `search` | String | Ninguno | Búsqueda insensible a mayúsculas en nombre de estudiante o título de curso |
+| `GET` | `/enrollments` | `studentId`| Integer $\ge 1$ | Ninguno | Filtra matrículas de un estudiante |
+| `GET` | `/enrollments` | `courseId` | Integer $\ge 1$ | Ninguno | Filtra matrículas de un curso |
+| `GET` | `/enrollments` | `activeOnly`| String (`"true" \| "false"`) | Ninguno | Filtra solo estudiantes activos (`student.isActive = true`) |
+| `GET` | `/enrollments` | `page` | Integer $\ge 1$ | `1` | Número de página |
+| `GET` | `/enrollments` | `limit` | Integer $[1, 50]$ | `10` | Límite por página (máx. 50) |
+| `POST` | `/enrollments` | - | `{ studentId, courseId }` | - | Crear matrícula con validación de estudiante activo y no duplicidad (`201`, `400`, `404`, `409`) |
+| `GET` | `/students/:studentId/enrollments` | - | - | - | Matrículas por estudiante |
+| `GET` | `/courses/:courseId/enrollments` | - | - | - | Matrículas por curso |
+| `DELETE`| `/enrollments/:id` | - | - | - | Cancelar matrícula (`200`, `404`) |
+
+---
+
+### 3. Estudiantes (`/students`)
 | Método | Endpoint | Descripción | Códigos HTTP |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/students` | Registrar nuevo estudiante (email único) | `201`, `400`, `409` |
@@ -104,115 +163,78 @@ npm test
 
 ---
 
-### 2. Cursos (`/courses`)
-| Método | Endpoint | Descripción | Códigos HTTP |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/courses` | Registrar curso | `201`, `400` |
-| `GET` | `/courses` | Listar cursos (filtro opcional: `level`) | `200` |
-| `GET` | `/courses/:id` | Obtener detalle de curso | `200`, `404` |
-| `PATCH` | `/courses/:id` | Actualizar curso | `200`, `404` |
-| `DELETE` | `/courses/:id` | Eliminar curso | `200`, `404` |
+## 🛡️ Principios de Seguridad y Calidad del Contrato
+
+1. **Prevención de Inyección SQL en Ordenamiento:**
+   - En TypeORM, los valores de los filtros se parametrizan automáticamente, pero los nombres de columna en cláusulas `ORDER BY` no pueden parametrizarse a nivel de driver SQL.
+   - En `CoursesQueryDto` se aplica `@IsIn(['id', 'title', 'level'])`, rechazando cualquier columna inexistente o maliciosa con código `400 Bad Request`.
+2. **Protección contra Descargas Masivas:**
+   - Los parámetros `limit` están acotados con `@Max(50)` tanto en Cursos como en Matrículas, evitando ataques de denegación de servicio (DoS) por extracción de datasets masivos.
+3. **Búsqueda Insensible y Segura con `QueryBuilder`:**
+   - La búsqueda textual utiliza el operador `ILIKE :search` con parámetros vinculados (`{ search: '%...%' }`). Nunca se interpola texto directamente en la sentencia SQL.
+   - La condición se agrupa entre paréntesis: `(student.name ILIKE :search OR course.title ILIKE :search)` para evitar que la precedencia del operador `OR` rompa los filtros `AND` subsiguientes.
+4. **Semántica REST en Búsquedas Vacías:**
+   - Cuando un filtro o búsqueda no produce coincidencias, la API responde `200 OK` con `items: []` y `total: 0`. El código `404 Not Found` se reserva exclusivamente para recursos individuales inexistentes (ej. `GET /courses/999`).
+5. **Interpretación Estricta de Parámetros Booleanos:**
+   - Dado que los query params viajan como cadenas de texto, `activeOnly` se valida como `@IsBooleanString()` y se evalúa estrictamente con `query.activeOnly === 'true'`. Esto evita el error común donde `Boolean("false")` evalúa a `true` en JavaScript.
 
 ---
 
-### 3. Matrículas (`/enrollments`)
-| Método | Endpoint | Descripción | Body / Parámetros | Códigos HTTP |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/enrollments` | Registrar matrícula | `{ "studentId": 1, "courseId": 1 }` | `201`, `400`, `404`, `409` |
-| `GET` | `/enrollments` | Listar matrículas con datos de estudiante y curso | Query opcional: `?studentId=1&courseId=1` | `200`, `400` |
-| `GET` | `/students/:studentId/enrollments` | Listar matrículas de un estudiante | `studentId` en ruta | `200`, `400`, `404` |
-| `GET` | `/courses/:courseId/enrollments` | Listar matrículas de un curso | `courseId` en ruta | `200`, `400`, `404` |
-| `DELETE` | `/enrollments/:id` | Cancelar matrícula | `id` en ruta | `200`, `400`, `404` |
+## 🧪 Demostración Requerida (Semana 6 · Sesiones 11 y 12)
 
----
+La colección oficial de Postman para esta etapa está disponible en:  
+[`postman/CourseHub_API_Semana_6.postman_collection.json`](file:///c:/Users/kevin/OneDrive/Escritorio/Uleam/5to%20semestre/Aplicaciones%20para%20el%20Servidor%20Web%202026-2/coursehub-api/postman/CourseHub_API_Semana_6.postman_collection.json)
 
-## 🛡️ Reglas de Negocio e Integridad
+A continuación se detallan las pruebas con comandos cURL reproducibles:
 
-1. **Integridad del Correo:** El correo debe ser único en la base de datos (`@Column({ unique: true })`) y en la lógica del servicio. Si se intenta duplicar, responde `409 Conflict`.
-2. **Validación de Estudiante:** El estudiante debe existir (`404 Not Found`).
-3. **Validación de Estado Activo:** Solo estudiantes activos (`isActive: true`) pueden matricularse. Si está inactivo, responde `400 Bad Request`.
-4. **Validación de Curso:** El curso debe existir (`404 Not Found`).
-5. **Prevención de Matrícula Duplicada:** Una pareja estudiante–curso no puede matricularse dos veces. Se valida en servicio y en base de datos mediante la restricción única `@Unique('UQ_student_course', ['student', 'course'])`, respondiendo `409 Conflict`.
-6. **Relaciones en TypeORM:** Claves foráneas reales gestionadas por TypeORM (`@ManyToOne` con `Student` y `Course`).
-7. **Carga de Relaciones:** Todas las consultas de matrículas cargan los objetos de `student` y `course` (`relations: { student: true, course: true }`).
-
----
-
-## 🕒 Extensión Opcional: `createdAt` Generado en Servidor
-
-La entidad `Enrollment` incluye el campo `createdAt` generado automáticamente con el decorador `@CreateDateColumn()`.
-
-**Justificación técnica:**
-El instante de la matrícula se genera en el servidor de base de datos y no se acepta como un valor enviado por el cliente para garantizar la **integridad temporal y auditoría no repudiable**: un cliente no debe poder falsificar la fecha/hora en la que realizó su inscripción ni alterar el orden cronológico oficial de los registros académicos.
-
----
-
-## 🧪 Secuencia de Demostración Reproducible (7 Casos)
-
-Puedes importar la colección de Postman ubicada en `postman/CourseHub_API_Semana_5.postman_collection.json` o ejecutar los siguientes comandos cURL:
-
-### 1. Crear un curso y un estudiante activo
+### 1. Paginación de Cursos - Página 1
 ```bash
-# Crear Curso
-curl -X POST http://localhost:3000/courses \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Desarrollo Web con NestJS", "level": "Intermedio"}'
-
-# Crear Estudiante Activo
-curl -X POST http://localhost:3000/students \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Carlos Mendoza", "email": "carlos.mendoza@uleam.edu.ec", "age": 21, "career": "Software", "semester": 5, "isActive": true}'
+curl -i "http://localhost:3000/courses?page=1&limit=5&sortBy=title&order=ASC"
 ```
+*Respuesta esperada:* `200 OK`, con 5 cursos en `items`, `meta.page = 1`, `meta.limit = 5` y `meta.totalPages`.
 
-### 2. Crear una matrícula válida
+### 2. Paginación de Cursos - Página 2 (Comprobar No Repetición)
 ```bash
-curl -X POST http://localhost:3000/enrollments \
-  -H "Content-Type: application/json" \
-  -d '{"studentId": 1, "courseId": 1}'
+curl -i "http://localhost:3000/courses?page=2&limit=5&sortBy=title&order=ASC"
 ```
+*Respuesta esperada:* `200 OK`, con los siguientes 5 cursos sin solapamiento ni repeticiones respecto a la página 1 gracias al orden determinista.
 
-### 3. Reiniciar la API y consultar la misma matrícula (Persistencia)
+### 3. Filtro de Cursos por Nivel
 ```bash
-curl http://localhost:3000/enrollments
+curl -i "http://localhost:3000/courses?level=beginner&page=1&limit=10"
 ```
+*Respuesta esperada:* `200 OK`, únicamente cursos con `level: "beginner"`, con el total correspondiente a este subconjunto en `meta.total`.
 
-### 4. Intentar una matrícula duplicada (409 Conflict)
+### 4. Búsqueda de Matrículas con Contexto Relacionado
 ```bash
-curl -i -X POST http://localhost:3000/enrollments \
-  -H "Content-Type: application/json" \
-  -d '{"studentId": 1, "courseId": 1}'
+curl -i "http://localhost:3000/enrollments?search=nest"
 ```
+*Respuesta esperada:* `200 OK`, listado de matrículas donde el nombre del estudiante o el título del curso contiene "nest" (insensible a mayúsculas/minúsculas), incluyendo los objetos anidados completos de `student` y `course`.
 
-### 5. Intentar matricular un estudiante inactivo (400 Bad Request)
+### 5. Combinar Búsqueda, Estudiante Activo y Paginación
 ```bash
-# Crear estudiante inactivo
-curl -X POST http://localhost:3000/students \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Ana Belén Gómez", "email": "ana.gomez@uleam.edu.ec", "age": 20, "career": "Software", "semester": 4, "isActive": false}'
-
-# Intentar matricular
-curl -i -X POST http://localhost:3000/enrollments \
-  -H "Content-Type: application/json" \
-  -d '{"studentId": 2, "courseId": 1}'
+curl -i "http://localhost:3000/enrollments?search=Carlos&activeOnly=true&page=1&limit=5"
 ```
+*Respuesta esperada:* `200 OK`, matrículas coincidentes que además pertenecen a estudiantes activos (`student.isActive = true`), paginadas a un máximo de 5 elementos.
 
-### 6. Filtrar las matrículas por estudiante o curso
+### 6. Casos Límite y Validaciones de Seguridad (Respuestas 400 Bad Request)
 ```bash
-# Por estudiante
-curl http://localhost:3000/students/1/enrollments
+# 6A: Página inválida (page = 0)
+curl -i "http://localhost:3000/courses?page=0"
 
-# Por curso
-curl http://localhost:3000/courses/1/enrollments
+# 6B: Límite superior al permitido (limit = 200 > 50)
+curl -i "http://localhost:3000/courses?limit=200"
 
-# Por query params combinables
-curl "http://localhost:3000/enrollments?studentId=1&courseId=1"
+# 6C: Intento de ordenamiento por campo arbitrario no permitido
+curl -i "http://localhost:3000/courses?sortBy=password"
+
+# 6D: activeOnly no booleano
+curl -i "http://localhost:3000/enrollments?activeOnly=invalido"
 ```
+*Respuesta esperada en todas:* `400 Bad Request` emitido por el `ValidationPipe` global con el arreglo de mensajes de error explicativos.
 
-### 7. Cancelar la matrícula y comprobar que ya no se encuentra
+### 7. Búsqueda sin Resultados (Colección Vacía con 200 OK)
 ```bash
-# Cancelar matrícula
-curl -X DELETE http://localhost:3000/enrollments/1
-
-# Comprobar que responde 404
-curl -i -X DELETE http://localhost:3000/enrollments/1
+curl -i "http://localhost:3000/enrollments?search=termino_inexistente_xyz_123"
 ```
+*Respuesta esperada:* `200 OK` con `{ "items": [], "meta": { "total": 0, "page": 1, "limit": 10, "totalPages": 0 } }` (no 404).

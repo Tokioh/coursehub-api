@@ -20,7 +20,14 @@ describe('EnrollmentsService', () => {
             create: vi.fn(),
             save: vi.fn(),
             remove: vi.fn(),
-            createQueryBuilder: vi.fn(),
+            createQueryBuilder: vi.fn().mockReturnValue({
+              leftJoinAndSelect: vi.fn().mockReturnThis(),
+              andWhere: vi.fn().mockReturnThis(),
+              orderBy: vi.fn().mockReturnThis(),
+              skip: vi.fn().mockReturnThis(),
+              take: vi.fn().mockReturnThis(),
+              getManyAndCount: vi.fn().mockResolvedValue([[], 0]),
+            }),
           },
         },
         {
@@ -43,5 +50,13 @@ describe('EnrollmentsService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('should return paginated enrollments structure', async () => {
+    const result = await service.findAll();
+    expect(result).toHaveProperty('items');
+    expect(result).toHaveProperty('meta');
+    expect(result.meta.page).toBe(1);
+    expect(result.meta.limit).toBe(10);
   });
 });

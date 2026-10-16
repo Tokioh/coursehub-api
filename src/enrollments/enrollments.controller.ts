@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { EnrollmentsService } from './enrollments.service.js';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto.js';
-import { FilterEnrollmentDto } from './dto/filter-enrollment.dto.js';
+import { EnrollmentsQueryDto } from './dto/enrollments-query.dto.js';
 import { ParsePositiveIntPipe } from './pipes/parse-positive-int.pipe.js';
 
 @Controller()
@@ -25,10 +25,10 @@ export class EnrollmentsController {
     return this.enrollmentsService.create(createEnrollmentDto);
   }
 
-  // 2. GET /enrollments?studentId=1&courseId=2 (Consulta con filtros combinables opcionales)
+  // 2. GET /enrollments (Consulta con filtros combinables opcionales, búsqueda y paginación)
   @Get('enrollments')
-  findAll(@Query() filters: FilterEnrollmentDto) {
-    return this.enrollmentsService.findAll(filters);
+  findAll(@Query() query: EnrollmentsQueryDto) {
+    return this.enrollmentsService.findAll(query);
   }
 
   // 3. GET /students/:studentId/enrollments (Consulta matrículas de un estudiante específico)

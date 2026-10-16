@@ -14,6 +14,7 @@ describe('CoursesService', () => {
           provide: getRepositoryToken(Course),
           useValue: {
             find: vi.fn(),
+            findAndCount: vi.fn().mockResolvedValue([[], 0]),
             findOneBy: vi.fn(),
             create: vi.fn(),
             save: vi.fn(),
@@ -28,5 +29,13 @@ describe('CoursesService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('should return paginated courses structure', async () => {
+    const result = await service.findAll();
+    expect(result).toHaveProperty('items');
+    expect(result).toHaveProperty('meta');
+    expect(result.meta.page).toBe(1);
+    expect(result.meta.limit).toBe(10);
   });
 });
