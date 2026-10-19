@@ -67,12 +67,13 @@ cp .env.example .env
 
 Variables requeridas en `.env`:
 ```env
+NODE_ENV=development
 PORT=3000
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_NAME=coursehub
-DATABASE_USER=postgres
-DATABASE_PASSWORD=tu_password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=coursehub
+DB_USER=postgres
+DB_PASSWORD=replace-with-your-local-password
 ```
 
 ---
