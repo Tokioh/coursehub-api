@@ -8,7 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Enrollment } from './entities/enrollment.entity.js';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto.js';
-import { FilterEnrollmentDto } from './dto/filter-enrollment.dto.js';
 import { EnrollmentsQueryDto } from './dto/enrollments-query.dto.js';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface.js';
 import { StudentsService } from '../students/students.service.js';

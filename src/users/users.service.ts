@@ -62,4 +62,13 @@ export class UsersService {
       where: { email: email.trim().toLowerCase() },
     });
   }
+
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    const normalizedEmail = email.trim().toLowerCase();
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email: normalizedEmail })
+      .getOne();
+  }
 }
