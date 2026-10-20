@@ -5,6 +5,8 @@ import Joi from 'joi';
 import { CoursesModule } from './courses/courses.module.js';
 import { StudentsModule } from './students/students.module.js';
 import { EnrollmentsModule } from './enrollments/enrollments.module.js';
+import { UsersModule } from './users/users.module.js';
+import { AuthModule } from './auth/auth.module.js';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { EnrollmentsModule } from './enrollments/enrollments.module.js';
     CoursesModule,
     StudentsModule,
     EnrollmentsModule,
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
