@@ -48,6 +48,20 @@ src/
     │   └── enrollment.entity.ts # Entidad Enrollment (claves foráneas ManyToOne y UQ composite)
     └── pipes/
         └── parse-positive-int.pipe.ts
+├── users/                     # Módulo de Persistencia y Gestión de Cuentas (Semana 8)
+│   ├── users.controller.ts
+│   ├── users.module.ts
+│   ├── users.service.ts       # Hash con bcrypt, normalización y exclusión de passwordHash
+│   ├── dto/
+│   │   └── create-user.dto.ts # Validación estricta y normalización de correo
+│   └── entities/
+│       └── user.entity.ts     # Entidad User (email único, password_hash con select: false)
+└── auth/                      # Módulo de Autenticación y Acceso Seguro (Semana 8)
+    ├── auth.controller.ts     # POST /auth/register (201) y POST /auth/login (200)
+    ├── auth.module.ts
+    ├── auth.service.ts        # Coordinación de registro y comprobación con bcrypt.compare
+    └── dto/
+        └── login.dto.ts       # DTO para inicio de sesión con normalización de correo
 ```
 
 ---
@@ -164,6 +178,16 @@ Permite consultar matrículas con sus relaciones precargadas (`Student` y `Cours
 
 ---
 
+### 4. Autenticación y Cuentas (`/auth`) · *Semana 8 · Avance de Etapa 3*
+Gestiona la creación de cuentas persistentes y la validación segura de credenciales mediante bcrypt antes de la introducción de JWT.
+
+| Método | Endpoint | Body JSON | Códigos HTTP | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/auth/register` | `{ "email": string, "password": string }` | `201`, `400`, `409` | Registra una cuenta. Hashea con bcrypt (`saltRounds=10`), normaliza el correo (`trim` + `lowercase`) y devuelve `{ id, email, createdAt }` sin exponer el hash. |
+| `POST` | `/auth/login` | `{ "email": string, "password": string }` | `200`, `400`, `401` | Verifica credenciales mediante `bcrypt.compare`. Recupera el hash únicamente para la validación. Responde `401 Unauthorized` genérico (*"Credenciales inválidas"*) ante correo inexistente o contraseña incorrecta sin revelar la existencia del correo. |
+
+---
+
 ## 🛡️ Principios de Seguridad y Calidad del Contrato
 
 1. **Prevención de Inyección SQL en Ordenamiento:**
@@ -239,3 +263,61 @@ curl -i "http://localhost:3000/enrollments?activeOnly=invalido"
 curl -i "http://localhost:3000/enrollments?search=termino_inexistente_xyz_123"
 ```
 *Respuesta esperada:* `200 OK` con `{ "items": [], "meta": { "total": 0, "page": 1, "limit": 10, "totalPages": 0 } }` (no 404).
+
+---
+
+## 🧪 Demostración Requerida (Semana 8 · Avance de Etapa 3: Autenticación)
+
+Colección oficial de Postman para esta etapa:  
+[`postman/CourseHub_API_Semana_8.postman_collection.json`](file:///c:/Users/kevin/OneDrive/Escritorio/Uleam/5to%20semestre/Aplicaciones%20para%20el%20Servidor%20Web%202026-2/coursehub-api/postman/CourseHub_API_Semana_8.postman_collection.json)
+
+### Secuencia de Verificación:
+
+#### 1. Registro Válido (201 Created)
+```bash
+curl -i -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "estudiante@uleam.edu.ec", "password": "PasswordSeguro123"}'
+```
+*Respuesta esperada:* `201 Created` con `{ "id": 1, "email": "estudiante@uleam.edu.ec", "createdAt": "..." }` (sin hash).
+
+#### 2. Registro Duplicado con Mayúsculas (409 Conflict)
+```bash
+curl -i -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "ESTUDIANTE@ULEAM.EDU.EC", "password": "PasswordSeguro123"}'
+```
+*Respuesta esperada:* `409 Conflict` (correo ya registrado debido a la normalización a minúsculas).
+
+#### 3. Login Correcto (200 OK)
+```bash
+curl -i -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "estudiante@uleam.edu.ec", "password": "PasswordSeguro123"}'
+```
+*Respuesta esperada:* `200 OK` con los datos seguros del usuario autenticado vía `bcrypt.compare`.
+
+#### 4. Login con Contraseña Incorrecta (401 Unauthorized)
+```bash
+curl -i -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "estudiante@uleam.edu.ec", "password": "ClaveIncorrecta"}'
+```
+*Respuesta esperada:* `401 Unauthorized` con mensaje genérico `{"message": "Credenciales inválidas"}`.
+
+#### 5. Login con Correo Inexistente (401 Unauthorized)
+```bash
+curl -i -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "noexiste@uleam.edu.ec", "password": "PasswordSeguro123"}'
+```
+*Respuesta esperada:* `401 Unauthorized` con el **mismo** mensaje genérico `{"message": "Credenciales inválidas"}` sin revelar si el correo existe.
+
+#### 6. Cuerpo Inválido en Registro o Login (400 Bad Request)
+```bash
+curl -i -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "no-es-correo", "password": "123"}'
+```
+*Respuesta esperada:* `400 Bad Request` validado antes de interactuar con la base de datos.
+

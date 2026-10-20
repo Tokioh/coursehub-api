@@ -1,0 +1,319 @@
+{
+	"info": {
+		"_postman_id": "coursehub-api-semana-6",
+		"name": "CourseHub API - Semana 6 (Demostración Sesiones 11 y 12)",
+		"description": "Colección de pruebas para CourseHub API con Filtros, Paginación, Ordenamiento Seguro, Búsqueda ILIKE y Relaciones (Semana 6).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0. Preparación (Semillas)",
+			"item": [
+				{
+					"name": "Crear Estudiante 1 (Carlos - Activo)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Carlos Mendoza\",\n  \"email\": \"carlos.mendoza@uleam.edu.ec\",\n  \"age\": 21,\n  \"career\": \"Software\",\n  \"semester\": 5,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/students",
+							"host": ["{{baseUrl}}"],
+							"path": ["students"]
+						}
+					}
+				},
+				{
+					"name": "Crear Estudiante 2 (Ana - Inactiva)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ana Belén Gómez\",\n  \"email\": \"ana.gomez@uleam.edu.ec\",\n  \"age\": 20,\n  \"career\": \"Software\",\n  \"semester\": 4,\n  \"isActive\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/students",
+							"host": ["{{baseUrl}}"],
+							"path": ["students"]
+						}
+					}
+				},
+				{
+					"name": "Crear Curso 1 (NestJS Backend - beginner)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Introducción a NestJS\",\n  \"level\": \"beginner\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/courses",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"]
+						}
+					}
+				},
+				{
+					"name": "Crear Curso 2 (TypeScript Avanzado - advanced)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"TypeScript Avanzado y Arquitectura\",\n  \"level\": \"advanced\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/courses",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"]
+						}
+					}
+				},
+				{
+					"name": "Crear Curso 3 (PostgreSQL y TypeORM - intermediate)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"PostgreSQL y TypeORM en Producción\",\n  \"level\": \"intermediate\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/courses",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"]
+						}
+					}
+				},
+				{
+					"name": "Crear Matrícula (Carlos en NestJS)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": 1,\n  \"courseId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": ["{{baseUrl}}"],
+							"path": ["enrollments"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "1. Sesión 11 · Cursos (Paginación, Filtros y Orden)",
+			"item": [
+				{
+					"name": "Demostración 1: Cursos - Página 1 (limit=5, sortBy=title, order=ASC)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses?page=1&limit=5&sortBy=title&order=ASC",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "5" },
+								{ "key": "sortBy", "value": "title" },
+								{ "key": "order", "value": "ASC" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 2: Cursos - Página 2 (Comprobar no repetición de elementos)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses?page=2&limit=5&sortBy=title&order=ASC",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"],
+							"query": [
+								{ "key": "page", "value": "2" },
+								{ "key": "limit", "value": "5" },
+								{ "key": "sortBy", "value": "title" },
+								{ "key": "order", "value": "ASC" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 3: Filtrar cursos por nivel (level=beginner)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses?level=beginner&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"],
+							"query": [
+								{ "key": "level", "value": "beginner" },
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 6A: Error 400 - page=0 inválido",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses?page=0",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"],
+							"query": [
+								{ "key": "page", "value": "0" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 6B: Error 400 - limit=200 superior a 50",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses?limit=200",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"],
+							"query": [
+								{ "key": "limit", "value": "200" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 6C: Error 400 - sortBy no permitido (seguridad)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses?sortBy=password",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses"],
+							"query": [
+								{ "key": "sortBy", "value": "password" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Sesión 12 · Matrículas (QueryBuilder, Búsqueda y Filtros)",
+			"item": [
+				{
+					"name": "Demostración 4: Búsqueda segura de matrículas (search=nest)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments?search=nest",
+							"host": ["{{baseUrl}}"],
+							"path": ["enrollments"],
+							"query": [
+								{ "key": "search", "value": "nest" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 5: Combinar búsqueda, estudiante activo y paginación",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments?search=Carlos&activeOnly=true&page=1&limit=5",
+							"host": ["{{baseUrl}}"],
+							"path": ["enrollments"],
+							"query": [
+								{ "key": "search", "value": "Carlos" },
+								{ "key": "activeOnly", "value": "true" },
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "5" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 6D: Error 400 - activeOnly no booleano",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments?activeOnly=invalido",
+							"host": ["{{baseUrl}}"],
+							"path": ["enrollments"],
+							"query": [
+								{ "key": "activeOnly", "value": "invalido" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Demostración 7: Búsqueda sin coincidencias (Colección vacía 200 OK con items: [])",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments?search=no_existe_termino_xyz",
+							"host": ["{{baseUrl}}"],
+							"path": ["enrollments"],
+							"query": [
+								{ "key": "search", "value": "no_existe_termino_xyz" }
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,444 @@
+{
+	"info": {
+		"_postman_id": "coursehub-api-semana-5",
+		"name": "CourseHub API - Semana 5 (Demostración)",
+		"description": "Colección de pruebas para CourseHub API persistente (Semana 5) con los 7 casos de demostración requeridos.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Estudiantes",
+			"item": [
+				{
+					"name": "Crear Estudiante Activo (Carlos)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Carlos Mendoza\",\n  \"email\": \"carlos.mendoza@uleam.edu.ec\",\n  \"age\": 21,\n  \"career\": \"Software\",\n  \"semester\": 5,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/students",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students"
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear Estudiante Inactivo (Ana)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ana Belén Gómez\",\n  \"email\": \"ana.gomez@uleam.edu.ec\",\n  \"age\": 20,\n  \"career\": \"Software\",\n  \"semester\": 4,\n  \"isActive\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/students",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students"
+							]
+						}
+					}
+				},
+				{
+					"name": "Intento Crear Estudiante con Correo Duplicado (409 Conflict)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Carlos Duplicado\",\n  \"email\": \"carlos.mendoza@uleam.edu.ec\",\n  \"age\": 22,\n  \"career\": \"Software\",\n  \"semester\": 5,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/students",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students"
+							]
+						}
+					}
+				},
+				{
+					"name": "Listar Estudiantes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/students",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students"
+							]
+						}
+					}
+				},
+				{
+					"name": "Filtrar Estudiantes por Carrera y Estado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/students?career=Software&isActive=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students"
+							],
+							"query": [
+								{
+									"key": "career",
+									"value": "Software"
+								},
+								{
+									"key": "isActive",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener Estudiante por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/students/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students",
+								"1"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Cursos",
+			"item": [
+				{
+					"name": "Crear Curso (Desarrollo Web)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Desarrollo Web con NestJS\",\n  \"level\": \"Intermedio\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/courses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"courses"
+							]
+						}
+					}
+				},
+				{
+					"name": "Listar Cursos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"courses"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Demostración Semana 5 (Secuencia Requerida)",
+			"item": [
+				{
+					"name": "Paso 1 - Crear Curso para Demo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Arquitectura de Software y APIs\",\n  \"level\": \"Avanzado\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/courses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"courses"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 1b - Crear Estudiante Activo para Demo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mateo Cedeño\",\n  \"email\": \"mateo.cedeno@uleam.edu.ec\",\n  \"age\": 22,\n  \"career\": \"Tecnologías de la Información\",\n  \"semester\": 6,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/students",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 2 - Crear Matrícula Válida",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": 1,\n  \"courseId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 3 - Consultar Matrícula (Persistencia tras reinicio)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 4 - Intentar Matrícula Duplicada (409 Conflict)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": 1,\n  \"courseId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 5 - Intentar Matricular Estudiante Inactivo (400 Bad Request)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": 2,\n  \"courseId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 6a - Filtrar Matrículas por Estudiante (GET /students/:studentId/enrollments)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/students/1/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"students",
+								"1",
+								"enrollments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 6b - Filtrar Matrículas por Curso (GET /courses/:courseId/enrollments)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses/1/enrollments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"courses",
+								"1",
+								"enrollments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 6c - Filtrar Matrículas por Query Params (GET /enrollments?studentId=1&courseId=1)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments?studentId=1&courseId=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments"
+							],
+							"query": [
+								{
+									"key": "studentId",
+									"value": "1"
+								},
+								{
+									"key": "courseId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 7a - Cancelar Matrícula (DELETE /enrollments/:id)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Paso 7b - Verificar Cancelación (404 Not Found)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/enrollments/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"enrollments",
+								"1"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,211 @@
+{
+	"info": {
+		"_postman_id": "coursehub-api-semana-8",
+		"name": "CourseHub API - Semana 8 (Demostración Autenticación)",
+		"description": "Colección de pruebas para CourseHub API - Avance de Etapa 3 (Semana 8): Cuentas persistentes y autenticación inicial (Register y Login).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Demostración Semana 8",
+			"item": [
+				{
+					"name": "1 - Registro Válido (201 Created)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"estudiante@uleam.edu.ec\",\n  \"password\": \"PasswordSeguro123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Crea una cuenta válida. Debe responder 201 Created con { id, email, createdAt } y sin exponer el hash de contraseña."
+					}
+				},
+				{
+					"name": "2 - Registro Duplicado con Mayúsculas (409 Conflict)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ESTUDIANTE@ULEAM.EDU.EC\",\n  \"password\": \"OtraClave123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Intenta registrar el mismo correo en mayúsculas. Debe normalizarse y rechazar con 409 Conflict."
+					}
+				},
+				{
+					"name": "3 - Login Correcto (200 OK)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"estudiante@uleam.edu.ec\",\n  \"password\": \"PasswordSeguro123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Inicia sesión con credenciales válidas usando bcrypt.compare. Debe responder 200 OK."
+					}
+				},
+				{
+					"name": "4 - Login con Contraseña Incorrecta (401 Unauthorized)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"estudiante@uleam.edu.ec\",\n  \"password\": \"PasswordEquivocado\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Credenciales erróneas. Debe responder 401 Unauthorized con mensaje genérico ('Credenciales inválidas')."
+					}
+				},
+				{
+					"name": "5 - Login con Correo Inexistente (401 Unauthorized)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"noexiste@uleam.edu.ec\",\n  \"password\": \"CualquierClave123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Usuario inexistente. Debe responder con el MISMO 401 Unauthorized genérico sin revelar si el correo existe."
+					}
+				},
+				{
+					"name": "6 - Registro con Cuerpo Inválido (400 Bad Request)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"correo-invalido\",\n  \"password\": \"corta\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Valida que el DTO intercepte el error con 400 Bad Request antes de consultar la base de datos."
+					}
+				},
+				{
+					"name": "7 - Login con Cuerpo Inválido (400 Bad Request)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"correo-no-valido\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Valida que LoginDto rechace campos faltantes o inválidos con 400 Bad Request."
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
